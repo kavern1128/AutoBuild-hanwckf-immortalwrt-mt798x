@@ -21,6 +21,10 @@ on:
 env:
   REPO_URL: https://github.com/hanwckf/immortalwrt-mt798x
   REPO_BRANCH: openwrt-21.02
+  FEEDS_CONF: feeds.conf.default
+# CONFIG_FILE: .config
+  DIY_P1_SH: diy-part1.sh
+  DIY_P2_SH: diy-part2.sh
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
@@ -71,12 +75,25 @@ jobs:
       run: |
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-        
-    - name: 更新 & 安装 feeds
+
+    - name: Load custom feeds
       run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
         cd openwrt
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+        
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a && rm -rf feeds/luci/applications/luci-app-mosdns
+
+    - name: Modify for some packages
+      run: cd openwrt && 
+           rm -rf feeds/packages/net/{alist,adguardhome,xray*,v2ray*,v2ray*,sing*,smartdns} && 
+           rm -rf feeds/packages/lang/golang && 
+           git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
+
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
 
     - name: 加载.config设置
       run: |
