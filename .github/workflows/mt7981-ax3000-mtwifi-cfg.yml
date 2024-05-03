@@ -101,6 +101,7 @@ jobs:
         cp -f defconfig/mt7981-ax3000.config .config
         echo CONFIG_PACKAGE_kmod-wireguard=y >> .config
         echo CONFIG_PACKAGE_luci-app-mosdns=y >> .config
+        echo CONFIG_PACKAGE_luci-app-openclash=y >> .config
         
     - name: 下载软件包
       id: package
